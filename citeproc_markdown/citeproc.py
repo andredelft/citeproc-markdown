@@ -80,7 +80,7 @@ class CiteprocExtension(Extension):
     def __init__(self, **kwargs):
         self.config = {
             'citeproc_endpoint': [
-                '', "Correct the 'issued' and 'accessed' fields"
+                '', 'Citeproc endpoint where the HTTP requests will go'
             ],
             'citation_style': [
                 'chicago-author-date',
