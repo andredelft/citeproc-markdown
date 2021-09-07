@@ -1,6 +1,6 @@
 # citeproc-markdown
 
-[Python markdown]() extension to convert a CSL YAML block in markdown to a styled bibliography in the HTML output. Requires a [citeproc-js server](https://github.com/zotero/citeproc-js-server) in order to work.
+[Python markdown](https://github.com/Python-Markdown/markdown) extension to convert a CSL YAML block in markdown to a styled bibliography in the HTML output. Requires a [citeproc-js server](https://github.com/zotero/citeproc-js-server) in order to work.
 
 ## Example
 
