@@ -6,7 +6,7 @@
 
 ### Markdown source
 
-````
+````markdown
 # The origins of the term 'Anthropocene'
 
 The term _anthropocene_ has been coined by Crutzen and Stoermer in the year 2000.
