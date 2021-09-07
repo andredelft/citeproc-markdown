@@ -12,6 +12,7 @@ setup(
     version="0.1",
     description="Citeproc extension for Python markdown",
     long_description=README,
+    long_description_content_type="text/markdown",
     author="André van Delft",
     author_email="andre@delve.nu",
     license=None,
@@ -22,5 +23,9 @@ setup(
             'citeproc=citeproc_markdown.citeproc:CiteprocExtension'
         ]
     },
+    classifiers=[
+        'Development Status :: 4 - Beta',
+        'Programming Language :: Python :: 3'
+    ],
     include_package_data=True
 )

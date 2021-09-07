@@ -21,7 +21,7 @@ def format_bibliography(csl_yaml, citation_style, citeproc_endpoint=None):
     """
 
     if not citeproc_endpoint:
-        raise ValueError('No citeproc_endpoint defined')
+        raise ValueError('No citeproc endpoint defined')
 
     r = requests.post(
         citeproc_endpoint,
