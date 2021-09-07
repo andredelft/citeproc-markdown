@@ -11,7 +11,7 @@ The term _anthropocene_ has been coined by Crutzen and Stoermer in the year 2000
       given: E.F.
   container-title: Global Change Newsletter
   issued:
-    - year: 2000
+    raw: "2000"
   page: 17-18
   title: The “Anthropocene”
   type: article-journal
