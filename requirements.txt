@@ -1,5 +1,6 @@
-pyyaml>=5.4.1
-requests>=2.26.0
-ratelimit>=2.2.1
-markdown>=3.3.4
+pyyaml>=5.4
+requests>=2.26
+ratelimit>=2.2
+markdown>=3.3
 python-decouple>=3.4
+json5>=0.9

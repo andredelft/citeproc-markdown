@@ -1,5 +1,7 @@
 import re
 import yaml
+import json
+import json5
 import requests
 from ratelimit import limits, sleep_and_retry
 from markdown import Extension
@@ -14,10 +16,13 @@ class CiteprocConversionError(Exception):
 
 
 @sleep_and_retry
-@limits(calls=5, period=1)
-def format_bibliography(csl_yaml, citation_style, citeproc_endpoint=None):
+@limits(
+    calls=decouple.config('RATE_LIMIT_CALLS', default=5, cast=int),
+    period=decouple.config('RATE_LIMIT_PERIOD', default=1, cast=int)
+)
+def format_bibliography(data, citation_style, citeproc_endpoint=None):
     """
-    POST request to CITEPROC_ENDPOINT to format csl_yaml as a bibliography in
+    POST request to CITEPROC_ENDPOINT to format data as a bibliography in
     CITATION_STYLE.
     """
 
@@ -26,7 +31,7 @@ def format_bibliography(csl_yaml, citation_style, citeproc_endpoint=None):
 
     r = requests.post(
         citeproc_endpoint,
-        json={'items': csl_yaml},
+        json={'items': data},
         params={
             'style': citation_style,
             'responseformat': 'html'
@@ -46,12 +51,19 @@ def format_bibliography(csl_yaml, citation_style, citeproc_endpoint=None):
 
 class CSLYAMLPreprocessor(Preprocessor):
 
-    RE_CSL_YAML = re.compile(
-        r'''
-            (?P<fence>^(?:~{3,}|`{3,}))[ ]*     # opening fence
-            bibl
+    LANGUAGE_PROCESSORS = {
+        'yaml': yaml.safe_load,
+        'json': json.loads,
+        'json5': json5.loads
+    }
+    LANGUAGES = LANGUAGE_PROCESSORS.keys()
+
+    RE_CSL_BLOCK = re.compile(
+        fr'''
+            (?P<fence>^(?:~{{3,}}|`{{3,}}))[ ]*  # opening fence
+            csl-(?P<language>{"|".join(LANGUAGES)})  # data language
             \n                                  # newline (end of opening fence)
-            (?P<csl_yaml>.*?)(?<=\n)            # the CSL YAML block
+            (?P<data>.*?)(?<=\n)                # the bibliographic data
             (?P=fence)[ ]*$                     # closing fence
         ''',
         flags=re.MULTILINE | re.DOTALL | re.VERBOSE
@@ -62,17 +74,19 @@ class CSLYAMLPreprocessor(Preprocessor):
         self.configs = configs
 
     def _add_to_stash(self, m):
-        csl_yaml = yaml.load(m['csl_yaml'], Loader=yaml.FullLoader)
+        data = self.LANGUAGE_PROCESSORS[m['language']](m['data'])
+
         styled_bibl = format_bibliography(
-            csl_yaml, citation_style=self.configs['citation_style'],
+            data, citation_style=self.configs['citation_style'],
             citeproc_endpoint=self.configs['citeproc_endpoint']
         )
+
         placeholder = self.md.htmlStash.store(styled_bibl)
         return placeholder
 
     def run(self, lines):
         text = '\n'.join(lines)
-        text = self.RE_CSL_YAML.sub(self._add_to_stash, text)
+        text = self.RE_CSL_BLOCK.sub(self._add_to_stash, text)
         return text.split('\n')
 
 
@@ -90,9 +104,7 @@ class CiteprocExtension(Extension):
 
         try:
             self.config['citeproc_endpoint'] = [
-                decouple.config(
-                    'CITEPROC_ENDPOINT', cast=str
-                ),
+                decouple.config('CITEPROC_ENDPOINT'),
                 citeproc_help_text
             ]
         except decouple.UndefinedValueError:
