@@ -13,3 +13,5 @@ $ pip install pytest
 ```sh
 $ pytest
 ```
+
+The test output HTML snippets are written to /tests/output/.
