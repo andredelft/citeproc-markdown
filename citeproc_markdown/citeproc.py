@@ -52,9 +52,18 @@ def format_bibliography(data, citation_style, citeproc_endpoint=None):
 class CSLYAMLPreprocessor(Preprocessor):
 
     LANGUAGE_PROCESSORS = {
-        'yaml': yaml.safe_load,
-        'json': json.loads,
-        'json5': json5.loads
+        'yaml': {
+            'loader': yaml.safe_load,
+            'exception': yaml.YAMLError
+        },
+        'json': {
+            'loader': json.loads,
+            'exception': json.JSONDecodeError
+        },
+        'json5': {
+            'loader': json5.loads,
+            'exception': ValueError
+        }
     }
     LANGUAGES = LANGUAGE_PROCESSORS.keys()
 
@@ -74,15 +83,30 @@ class CSLYAMLPreprocessor(Preprocessor):
         self.configs = configs
 
     def _add_to_stash(self, m):
-        data = self.LANGUAGE_PROCESSORS[m['language']](m['data'])
+        language_processor = self.LANGUAGE_PROCESSORS[m['language']]
 
-        styled_bibl = format_bibliography(
-            data, citation_style=self.configs['citation_style'],
-            citeproc_endpoint=self.configs['citeproc_endpoint']
-        )
+        try:
+            data = language_processor['loader'](m['data'])
 
-        placeholder = self.md.htmlStash.store(styled_bibl)
+            styled_bibl = format_bibliography(
+                data, citation_style=self.configs['citation_style'],
+                citeproc_endpoint=self.configs['citeproc_endpoint']
+            )
+        except (CiteprocConversionError, language_processor['exception']) as e:
+            if self.configs['surpress_errors']:
+                return self._return_codeblock(m)
+            else:
+                raise e
+        else:
+            placeholder = self.md.htmlStash.store(styled_bibl)
+
         return placeholder
+
+    def _return_codeblock(self, m):
+        if self.configs['fenced_code_on_fail']:
+            return "{fence}{language}\n{data}\n{fence}".format(**m.groupdict())
+        else:
+            return '\n'.join([f'    {line}' for line in m['data'].split('\n')])
 
     def run(self, lines):
         text = '\n'.join(lines)
@@ -97,6 +121,20 @@ class CiteprocExtension(Extension):
             'citation_style': [
                 'chicago-author-date',
                 'Citation style that the bibliographies will be converted into.'
+            ],
+            'surpress_errors': [
+                True,
+                (
+                    'Only return codeblock when an error is raised and '
+                    'surpress the error.'
+                )
+            ],
+            'fenced_code_on_fail': [
+                False,
+                (
+                    'Format the returned codeblock according to the the '
+                    'fenced_code markdown extension.'
+                )
             ]
         }
 
