@@ -42,6 +42,8 @@ markdown(
 )
 ```
 
+Alternatively, the endpoint can also be defined through the environment variable `CITEPROC_ENDPOINT`, either in memory or in a `.env` or `settings.ini` file in the working directory.
+
 ### HTML output
 
 ```html
