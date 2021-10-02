@@ -2,7 +2,8 @@ import pytest
 from markdown import markdown
 from pathlib import Path
 
-OUTPUT_DIR = Path(__file__).parent / 'output'
+FILE_DIR = Path(__file__).parent
+OUTPUT_DIR = FILE_DIR / 'output'
 
 # Ensure OUTPUT_DIR exists
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -10,13 +11,13 @@ OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 @pytest.fixture
 def csl_blocks():
-    with open(Path(__file__).parent / 'csl-blocks.md') as f:
+    with open(FILE_DIR / 'csl-blocks.md') as f:
         return f.read()
 
 
 @pytest.fixture
 def malformed_csl_blocks():
-    with open(Path(__file__).parent / 'malformed-csl-blocks.md') as f:
+    with open(FILE_DIR / 'malformed-csl-blocks.md') as f:
         return f.read()
 
 
