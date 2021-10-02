@@ -4,6 +4,7 @@ import requests
 from ratelimit import limits, sleep_and_retry
 from markdown import Extension
 from markdown.preprocessors import Preprocessor
+import decouple
 
 from requests.exceptions import HTTPError
 
@@ -79,22 +80,35 @@ class CiteprocExtension(Extension):
 
     def __init__(self, **kwargs):
         self.config = {
-            'citeproc_endpoint': [
-                '', 'Citeproc endpoint where the HTTP requests will go'
-            ],
             'citation_style': [
                 'chicago-author-date',
                 'Citation style that the bibliographies will be converted into.'
             ]
         }
+
+        citeproc_help_text = 'Citeproc endpoint where the HTTP requests will go'
+
+        try:
+            self.config['citeproc_endpoint'] = [
+                decouple.config(
+                    'CITEPROC_ENDPOINT', cast=str
+                ),
+                citeproc_help_text
+            ]
+        except decouple.UndefinedValueError:
+            self.config['citeproc_endpoint'] = ['', citeproc_help_text]
+
         Extension.__init__(self, **kwargs)
 
     def extendMarkdown(self, md):
         configs = self.getConfigs()
-        if not configs['citeproc_endpoint']:
+
+        if not configs.get('citeproc_endpoint'):
             print(
                 'Warning: no citeproc_endpoint is defined in the citeproc '
-                'extension config, hence the processors will not be registered.'
+                'extension config or as environment variable '
+                'CITEPROC_ENDPOINT, hence the citeproc extension '
+                'processors will not be registered.'
             )
         else:
             md.registerExtension(self)
