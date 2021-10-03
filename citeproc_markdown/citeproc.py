@@ -22,8 +22,8 @@ class CiteprocConversionError(Exception):
 )
 def format_bibliography(data, citation_style, citeproc_endpoint=None):
     """
-    POST request to CITEPROC_ENDPOINT to format data as a bibliography in
-    CITATION_STYLE.
+    POST request to citeproc_endpoint to format data as a bibliography in
+    citation_style.
     """
 
     if not citeproc_endpoint:
@@ -45,11 +45,11 @@ def format_bibliography(data, citation_style, citeproc_endpoint=None):
             f'Citeproc endpoint returned HTTP {r.status_code} error: '
             + r.content.decode()
         )
+    else:
+        return r.content.decode()
 
-    return r.content.decode()
 
-
-class CSLYAMLPreprocessor(Preprocessor):
+class CSLBlockPreprocessor(Preprocessor):
 
     LANGUAGE_PROCESSORS = {
         'yaml': {
@@ -163,6 +163,6 @@ class CiteprocExtension(Extension):
         else:
             md.registerExtension(self)
             md.preprocessors.register(
-                CSLYAMLPreprocessor(md, configs),
-                'csl_yaml', 26  # Before FencedBlockPreprocessor
+                CSLBlockPreprocessor(md, configs),
+                'csl_block', 26  # Before FencedBlockPreprocessor
             )
